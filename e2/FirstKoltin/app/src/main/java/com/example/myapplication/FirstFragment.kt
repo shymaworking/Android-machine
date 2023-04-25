@@ -35,8 +35,8 @@ class FirstFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+//        findNavController().navigate(R.id.action_FirstFragment_to_SecondFragment)
         binding.random.setOnClickListener {
-//            findNavController().navigate(R.id.action_FirstFragment_to_SecondFragment)
             val showCountTextView = view.findViewById<TextView>(R.id.textview_first)
             val currentCount = showCountTextView.text.toString().toInt()
             Log.d("suxin", currentCount.toString())
@@ -64,7 +64,7 @@ class FirstFragment : Fragment() {
         // Convert value to a number and increment it
         var count = countString.toInt()
         val random = java.util.Random()
-        count = count + random.nextInt(999);
+        count = count + random.nextInt(999);  //拿一个随机数
         showCountTextView.text = count.toString();
     }
 
