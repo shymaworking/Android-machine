@@ -66,7 +66,80 @@
     <img src="../images/e2/e2-1-2.jpg" width="200" height="300">
     <img src="../images/e2/e2-1-3.jpg" width="200" height="300">
 ### CameraX的使用
-- 运行截图 <br>
+1. 实现思路：
+   - 依赖配置：在build.gradle的dependencies中添加依赖
+    ```
+    //CameraX依赖
+    implementation "androidx.camera:camera-core:${camerax_version}"
+    implementation "androidx.camera:camera-camera2:${camerax_version}"
+    implementation "androidx.camera:camera-lifecycle:${camerax_version}"
+    implementation "androidx.camera:camera-video:${camerax_version}"
+    implementation "androidx.camera:camera-view:${camerax_version}"
+    implementation "androidx.camera:camera-extensions:${camerax_version}"
+
+    ```
+   - 权限申请：android6.0后不仅要在清单文件中声明权限，还要在运行时动态申请权限(录像和拍照需要申请录像，拍照和外部存储权限)。
+     - 清单文件：
+    ```
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+
+    ```
+    - 动态申请：
+    ```
+    private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
+        ContextCompat.checkSelfPermission(
+            baseContext, it
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+    ```
+2. 编写关键逻辑代码：
+    ```
+       val mediaStoreOutputOptions = MediaStoreOutputOptions
+        .Builder(contentResolver, MediaStore.Video.Media.EXTERNAL_CONTENT_URI)
+        .setContentValues(contentValues)
+        .build()
+        recording = videoCapture.output
+       .prepareRecording(this, mediaStoreOutputOptions)
+        .apply {
+            if (PermissionChecker.checkSelfPermission(this@MainActivity,
+                    Manifest.permission.RECORD_AUDIO) ==
+                    PermissionChecker.PERMISSION_GRANTED)
+                {
+                    withAudioEnabled()
+                }
+            }
+            .start(ContextCompat.getMainExecutor(this)) { recordEvent ->
+                when(recordEvent) {
+                    is VideoRecordEvent.Start -> {
+                        viewBinding.videoCaptureButton.apply {
+                            text = getString(R.string.stop_capture)
+                            isEnabled = true
+                        }
+                    }
+                    is VideoRecordEvent.Finalize -> {
+                        if (!recordEvent.hasError()) {
+                            val msg = "Video capture succeeded: " +
+                                    "${recordEvent.outputResults.outputUri}"
+                            Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT)
+                                .show()
+                            Log.d(TAG, msg)
+                        } else {
+                            recording?.close()
+                            recording = null
+                            Log.e(TAG, "Video capture ends with error: " +
+                                    "${recordEvent.error}")
+                        }
+                        viewBinding.videoCaptureButton.apply {
+                            text = getString(R.string.start_capture)
+                            isEnabled = true
+                        }
+                    }
+                }
+            }
+    ```
+3. 运行截图 <br>
     <img src="../images/e2/e2-2-3.jpg" width="200" height="300">
     <img src="../images/e2/e2-2-2.jpg" width="200" height="300">
     <img src="../images/e2/e2-2-1.jpg" width="200" height="300">
